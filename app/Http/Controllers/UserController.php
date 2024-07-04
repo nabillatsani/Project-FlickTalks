@@ -25,7 +25,7 @@ class UserController extends Controller
             $q->where('title', 'LIKE', '%' . $search . '%');
         });
     }
-    $movie = $query->paginate(10);
+    $movie = $query->get();
         return view('user/user_movie', ['movie' => $movie]);
     }
 
