@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
@@ -17,11 +16,9 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        // Ambil data user yang sedang login
-        $user = $request->user();
-
-        return view('profile.edit', ['user' => $user]);
-
+        return view('profile.edit', [
+            'user' => $request->user(),
+        ]);
     }
 
     /**
@@ -35,35 +32,35 @@ public function update(ProfileUpdateRequest $request): RedirectResponse
     $user = $request->user();
     $data = $request->validated();
 
-    // Update name and email
-    $user->fill([
-        'name' => $data['name'],
-        'email' => $data['email'],
-    ]);
-
-    // Handle profile photo upload
+    // Handle file upload if a new photo is provided
     if ($request->hasFile('foto')) {
-        // Hapus foto lama jika ada
+        // Validate the uploaded file
+        $request->validate([
+            'foto' => ['image'], // example validation rules
+        ]);
+
+        // Delete the old photo if exists
         if ($user->foto) {
             Storage::delete('public/akun/' . $user->foto);
         }
 
-        // Simpan foto baru
-        $file = $request->file('foto');
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $file->storeAs('public/akun', $fileName); // Simpan di storage public/akun
-        $user->foto = $fileName; // Simpan nama file foto ke dalam field 'foto' di tabel user
+        // Store the uploaded file with hashed filename
+        $fotoPath = $request->file('foto')->storeAs('public/akun', $request->file('foto')->hashName());
+        $data['foto'] = basename($fotoPath); // store the hashed filename only
     }
 
-    // Reset email verification if email has changed
+    // Update user's data
+    $user->fill($data);
+
     if ($user->isDirty('email')) {
         $user->email_verified_at = null;
     }
 
     $user->save();
 
-    return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    return redirect()->route('profile.edit')->with('status', 'profile-updated');
 }
+
 
 
     /**
