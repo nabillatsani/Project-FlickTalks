@@ -37,14 +37,16 @@ class RegisteredUserController extends Controller
             'foto' => ['required', 'image'],
             
         ]);
-        $fotoPath = $request->file('foto')->store('akun', 'public');
+        $fotoFile = $request->file('foto');
+        $hashedFileName = $fotoFile->hashName();
+        $fotoPath = $fotoFile->storeAs('public/akun', $hashedFileName);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'foto' => $fotoPath,
+            'foto' => $hashedFileName, // store hashed file name in database
         ]);
 
         event(new Registered($user));
