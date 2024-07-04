@@ -27,7 +27,7 @@ class MovieController extends Controller
     }
 
     // Ambil data film dengan paginasi
-    $movie = $query->paginate(10);
+    $movie = $query->get();
 
     return view('movie', ['movie' => $movie]);
 }
